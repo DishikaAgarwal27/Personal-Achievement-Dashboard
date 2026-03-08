@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="mb-4">Admin Dashboard</h2>
+
+<div class="row">
+
+<div class="col-md-6">
+
+<div class="card p-4 text-center">
+
+<h4>Total Users</h4>
+
+<h2>{{users}}</h2>
+
+</div>
+
+</div>
+
+<div class="col-md-6">
+
+<div class="card p-4 text-center">
+
+<h4>Total Visitors</h4>
+
+<h2>{{visitors}}</h2>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}
