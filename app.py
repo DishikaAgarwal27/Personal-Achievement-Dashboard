@@ -200,6 +200,53 @@ def admin():
         users=users,
         visitors=visitors
     )
+@app.route("/edit/<int:id>", methods=["GET", "POST"])
+def edit(id):
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    if request.method == "POST":
+
+        category = request.form["category"]
+        target = request.form["target"]
+
+        cur.execute("""
+        UPDATE targets
+        SET category = ?, target_hours = ?
+        WHERE id = ?
+        """, (category, target, id))
+
+        conn.commit()
+        conn.close()
+
+        return redirect("/dashboard")
+
+    activity = cur.execute(
+        "SELECT * FROM targets WHERE id=?",
+        (id,)
+    ).fetchone()
+
+    conn.close()
+
+    return render_template("edit.html", activity=activity)
+
+@app.route("/delete/<int:id>")
+def delete(id):
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "DELETE FROM targets WHERE id=?",
+        (id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/dashboard")
+
 
 
 if __name__ == "__main__":

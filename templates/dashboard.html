@@ -1,16 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
+{% extends "base.html" %}
 
-<title>Dashboard</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-</head>
-
-<body class="bg-light">
-
-<div class="container mt-5">
+{% block content %}
 
 <h2 class="mb-4">Activity Dashboard</h2>
 
@@ -18,52 +8,240 @@
 
 <h4>Add Target</h4>
 
-<form method="POST" class="row g-2 mb-4">
+<form method="POST" class="row g-2">
 
-<div class="col">
-<input type="text" name="category" class="form-control" placeholder="Activity">
+<div class="col-md-5">
+<input type="text" name="category" placeholder="Activity" class="form-control" required>
 </div>
 
-<div class="col">
-<input type="number" name="target" class="form-control" placeholder="Target Hours">
+<div class="col-md-5">
+<input type="number" name="target" placeholder="Target Hours" class="form-control" required>
 </div>
 
-<div class="col">
-<button class="btn btn-primary">Add</button>
+<div class="col-md-2">
+<button class="btn btn-primary w-100">Add</button>
 </div>
 
 </form>
 
-<table class="table table-bordered">
+
+<table class="table table-striped table-bordered mt-4">
+
+<thead class="table-dark">
 
 <tr>
 <th>Activity</th>
 <th>Target</th>
 <th>Completed</th>
+<th>Progress</th>
+<th>Status</th>
 <th>Update</th>
+<th>Edit</th>
+<th>Delete</th>
 </tr>
+
+</thead>
+
+<tbody>
 
 {% for row in data %}
 
 <tr>
 
-<td>{{row["category"]}}</td>
+<td>{{row.category}}</td>
 
-<td>{{row["target_hours"]}}</td>
+<td>{{row.target_hours}}</td>
 
-<td>{{row["completed_hours"]}}</td>
+<td>{{row.completed_hours}}</td>
 
 <td>
-<a href="/update/{{row['id']}}" class="btn btn-success btn-sm">+1 Hour</a>
+
+{% set target = row.target_hours|int %}
+{% set completed = row.completed_hours|int %}
+
+{% set percent = (completed / target * 100) if target > 0 else 0 %}
+
+<div class="progress">
+
+<div class="progress-bar bg-success"
+role="progressbar"
+style="width: {{percent}}%">
+
+{{percent|round(0)}}%
+
+</div>
+
+</div>
+
+</td>
+
+
+<td>
+
+{% if completed >= target %}
+
+<span class="badge bg-success">Completed</span>
+
+{% else %}
+
+<span class="badge bg-warning text-dark">In Progress</span>
+
+{% endif %}
+
+</td>
+
+
+<td>
+<a href="/update/{{row.id}}" class="btn btn-success btn-sm">+1 Hour</a>
+</td>
+
+<td>
+<a href="/edit/{{row.id}}" class="btn btn-warning btn-sm">Edit</a>
+</td>
+
+<td>
+<a href="/delete/{{row.id}}"
+class="btn btn-danger btn-sm"
+onclick="return confirm('Delete activity?')">
+Delete
+</a>
 </td>
 
 </tr>
 
 {% endfor %}
 
+</tbody>
+
 </table>
+
+
+<hr class="mt-5">
+
+<h3 class="mb-4">Activity Analytics</h3>
+
+<div class="row">
+
+<div class="col-md-6">
+<canvas id="barChart"></canvas>
+</div>
+
+<div class="col-md-6">
+<canvas id="pieChart"></canvas>
+</div>
 
 </div>
 
-</body>
-</html>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+var activityNames = [
+{% for row in data %}
+"{{row.category}}",
+{% endfor %}
+];
+
+var completedData = [
+{% for row in data %}
+{{row.completed_hours}},
+{% endfor %}
+];
+
+var targetData = [
+{% for row in data %}
+{{row.target_hours}},
+{% endfor %}
+];
+
+var colors = [
+"#ff6384",
+"#36a2eb",
+"#ffce56",
+"#4bc0c0",
+"#9966ff",
+"#ff9f40"
+];
+
+
+// BAR CHART
+
+new Chart(document.getElementById("barChart"), {
+
+type: "bar",
+
+data: {
+
+labels: activityNames,
+
+datasets: [
+
+{
+label: "Completed Hours",
+data: completedData,
+backgroundColor: colors
+},
+
+{
+label: "Target Hours",
+data: targetData,
+backgroundColor: "#2ecc71"
+}
+
+]
+
+},
+
+options: {
+
+responsive:true,
+
+plugins:{
+title:{
+display:true,
+text:"Activity Progress"
+}
+}
+
+}
+
+});
+
+
+// PIE CHART
+
+new Chart(document.getElementById("pieChart"), {
+
+type: "pie",
+
+data: {
+
+labels: activityNames,
+
+datasets: [{
+
+data: completedData,
+
+backgroundColor: colors
+
+}]
+
+},
+
+options:{
+
+plugins:{
+title:{
+display:true,
+text:"Completed Hours Distribution"
+}
+}
+
+}
+
+});
+
+</script>
+
+{% endblock %}
